@@ -19,9 +19,9 @@ export default function Home(){
   return (
     <section className="max-w-3xl mx-auto pt-16">
       <h1 className="text-3xl md:text-5xl font-extrabold text-center mb-6">
-        ¿Qué recomendación de Taylor Swift necesitas hoy?
+        De hecho hay una canción de Taylor Swift que explica mi situación
       </h1>
-      <p className="text-center opacity-80 mb-8">Cuéntame tu situación y te sugiero 1–3 canciones.</p>
+      <p className="text-center opacity-80 mb-8">Cuéntame tu situación y te digo que canciones de Taylor se asemejan a lo que me describas.</p>
       <div className="card bg-base-200/60 border border-base-300 shadow-glow">
         <div className="card-body gap-4">
           <textarea
