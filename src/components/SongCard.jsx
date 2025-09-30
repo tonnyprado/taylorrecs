@@ -19,7 +19,7 @@ export default function SongCard({ item, onPlay, onStop, isPlaying }){
               {meta.previewUrl && (
                 isPlaying
                   ? <button className="btn btn-sm btn-outline" onClick={onStop}>⏸ Detener</button>
-                  : <button className="btn btn-sm btn-primary" onClick={()=>onPlay(meta.previewUrl)}>▶︎ Preview</button>
+                  : <button className="btn btn-sm btn-primary" onClick={()=>onPlay(meta.previewUrl, meta.artwork)}>▶︎ Preview</button>
               )}
             </div>
           </div>

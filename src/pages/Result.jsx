@@ -6,6 +6,9 @@ import { searchItunes } from '../lib/platformLinks'
 import SongCard from '../components/SongCard'
 import * as htmlToImage from 'html-to-image'
 
+// 👇 importamos el background
+import { useBackground } from '../ui/background/BackgroundProvider'
+
 export default function Result(){
   const nav = useNavigate()
   const [params] = useSearchParams()
@@ -16,6 +19,9 @@ export default function Result(){
   const shareRef = useRef(null)
   const audioRef = useRef(new Audio())
   const [currentUrl, setCurrentUrl] = useState(null)
+
+  // 👇 hook para controlar el backdrop
+  const { showAlbumBackdrop, hideAlbumBackdrop } = useBackground()
 
   useEffect(()=>{
     if(!text || text.trim().length < 5){ nav('/') ; return }
@@ -31,7 +37,6 @@ export default function Result(){
       setLoading(false)
     })()
 
-    // limpiar audio al desmontar
     return () => stopAll()
   }, [text])
 
@@ -41,41 +46,51 @@ export default function Result(){
     audio.currentTime = 0
     setCurrentUrl(null)
     audio.onended = null
+    hideAlbumBackdrop() // 👈 ocultamos el fondo al detener o salir
   }
 
   function playAll(){
-    const urls = items.map(i=> i.meta?.previewUrl).filter(Boolean)
-    if(urls.length===0) return
+    const list = items
+      .map(i=> i.meta?.previewUrl && i.meta?.artwork ? ({ url: i.meta.previewUrl, art: i.meta.artwork }) : null)
+      .filter(Boolean)
+    if(list.length===0) return
+
     let idx = 0
     const audio = audioRef.current
-    audio.src = urls[0]
-    setCurrentUrl(urls[0])
+    audio.src = list[0].url
+    setCurrentUrl(list[0].url)
+    showAlbumBackdrop(list[0].art) // 👈 mostramos carátula
     audio.play().catch(()=>{})
+
     audio.onended = ()=>{
       idx++
-      if(idx<urls.length){
-        audio.src = urls[idx]
-        setCurrentUrl(urls[idx])
+      if(idx < list.length){
+        audio.src = list[idx].url
+        setCurrentUrl(list[idx].url)
+        showAlbumBackdrop(list[idx].art) // 👈 actualizamos carátula del siguiente track
         audio.play().catch(()=>{})
       } else {
         audio.onended = null
         setCurrentUrl(null)
+        hideAlbumBackdrop() // 👈 se acabó la lista → ocultamos
       }
     }
   }
 
-  function playOne(url){
+  function playOne(url, artwork){
     const audio = audioRef.current
-    if(currentUrl === url){ // toggle → detener
+    if(currentUrl === url){
       stopAll()
       return
     }
     audio.src = url
     setCurrentUrl(url)
+    showAlbumBackdrop(artwork) // 👈 mostramos carátula del track elegido
     audio.play().catch(()=>{})
     audio.onended = () => {
       setCurrentUrl(null)
       audio.onended = null
+      hideAlbumBackdrop() // 👈 se terminó → ocultamos
     }
   }
 
@@ -102,7 +117,7 @@ export default function Result(){
   }
 
   return (
-    <section className="max-w-4xl mx-auto pt-8">
+    <section className="max-w-4xl mx-auto pt-8 relative z-10">{/* 👈 aseguramos estar encima del backdrop */}
       <div className="flex items-center justify-between mb-4">
         <Link to="/" className="btn btn-ghost" onClick={stopAll}>← Volver</Link>
         <div className="badge badge-outline">{mode.toUpperCase()}</div>
@@ -133,7 +148,7 @@ export default function Result(){
               <SongCard
                 key={item.pick.id}
                 item={item}
-                onPlay={playOne}
+                onPlay={playOne}          // ahora recibe (url, artwork)
                 onStop={stopAll}
                 isPlaying={currentUrl === item.meta?.previewUrl}
               />
